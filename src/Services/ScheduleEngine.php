@@ -79,4 +79,91 @@ class ScheduleEngine
         $index = ($slot->id - 1) % count($days);
         return $days[$index];
     }
+    /**
+     * Check for student conflicts based on enrolled curriculum.
+     */
+    public function checkStudentConflicts(array $studentCurriculumSubjectIds, array $classSchedules): array
+    {
+        $conflicts = [];
+
+        foreach ($classSchedules as $i => $classA) {
+            foreach ($classSchedules as $j => $classB) {
+                if ($i >= $j) continue; // Avoid duplicate checks
+
+                if (
+                    in_array($classA->subject_id, $studentCurriculumSubjectIds) &&
+                    in_array($classB->subject_id, $studentCurriculumSubjectIds) &&
+                    $classA->day === $classB->day &&
+                    $classA->timeslot === $classB->timeslot &&
+                    (!$classA->override_conflict && !$classB->override_conflict)
+                ) {
+                    $conflicts[] = [
+                        'type' => 'student_conflict',
+                        'classA' => $classA,
+                        'classB' => $classB,
+                    ];
+                }
+            }
+        }
+
+        return $conflicts;
+    }
+
+    /**
+     * Check for room booking conflicts.
+     */
+    public function checkRoomConflicts(array $classSchedules): array
+    {
+        $conflicts = [];
+
+        foreach ($classSchedules as $i => $classA) {
+            foreach ($classSchedules as $j => $classB) {
+                if ($i >= $j) continue;
+
+                if (
+                    $classA->room_id === $classB->room_id &&
+                    $classA->day === $classB->day &&
+                    $classA->timeslot === $classB->timeslot &&
+                    (!$classA->override_conflict && !$classB->override_conflict)
+                ) {
+                    $conflicts[] = [
+                        'type' => 'room_conflict',
+                        'classA' => $classA,
+                        'classB' => $classB,
+                    ];
+                }
+            }
+        }
+
+        return $conflicts;
+    }
+
+    /**
+     * Check for teacher schedule conflicts.
+     */
+    public function checkTeacherConflicts(array $classSchedules): array
+    {
+        $conflicts = [];
+
+        foreach ($classSchedules as $i => $classA) {
+            foreach ($classSchedules as $j => $classB) {
+                if ($i >= $j) continue;
+
+                if (
+                    $classA->teacher_id === $classB->teacher_id &&
+                    $classA->day === $classB->day &&
+                    $classA->timeslot === $classB->timeslot &&
+                    (!$classA->override_conflict && !$classB->override_conflict)
+                ) {
+                    $conflicts[] = [
+                        'type' => 'teacher_conflict',
+                        'classA' => $classA,
+                        'classB' => $classB,
+                    ];
+                }
+            }
+        }
+
+        return $conflicts;
+    }
 }
