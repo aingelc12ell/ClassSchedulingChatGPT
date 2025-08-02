@@ -1,13 +1,31 @@
 <?php
 
+use DI\Bridge\Slim\Bridge;
+use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 require __DIR__ . '/../vendor/autoload.php';
+// Load environment variables
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
-$app = AppFactory::create();
+// Initialize Slim App with Container
+$container = new Container();
+# AppFactory::setContainer($container);
+# $app = AppFactory::create();
+
+$app = Bridge::create($container);
+
+// Load Dependencies
+$dependencies = require __DIR__ . '/../src/dependencies.php';
+$dependencies($app);
+
+// Register Middleware
+(require __DIR__ . '/../src/middleware.php')($app);
+
 
 // Database setup
 $capsule = new Capsule;

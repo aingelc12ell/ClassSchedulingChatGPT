@@ -45,7 +45,7 @@ A comprehensive modular scheduling system built with PHP (Slim Framework), MySQL
 ### First-Time Setup
 ```bash
 # Clone Repository
-git clone https://github.com/aingelc12ell/ClasSchedulingChatGPT.git
+git clone https://github.com/aingelc12ell/ClassSchedulingChatGPT.git
 cd scheduler
 
 # Build and Run Docker Stack

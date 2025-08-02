@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # CONFIG
 APP_DIR="/var/www/school-scheduler"
@@ -6,12 +7,27 @@ DB_NAME="school_schedule"
 DB_USER="scheduler_user"
 DB_PASS="StrongPassword123"
 JWT_SECRET="your-super-secret-key"
-PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+
+
+echo "🚀 Installing MySQL-Server..."
+
+TEMP_DIR="/tmp/installs"
+wget -q "https://dev.mysql.com/get/mysql-apt-config_${MYSQLAPT}_all.deb"  -O "$TEMP_DIR/mysql-apt-config.deb"
+dpkg -i "$TEMP_DIR/mysql-apt-config.deb"
+echo "mysql-apt-config mysql-apt-config/select-server select mysql-${MYSQLVERSION}" | debconf-set-selections
+DEBIAN_FRONTEND=noninteractive dpkg -i "$TEMP_DIR/mysql-apt-config.deb"
+apt update
+echo "mysql-community-server mysql-community-server/root-pass password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "mysql-community-server mysql-community-server/re-root-pass password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+apt update
+DEBIAN_FRONTEND=noninteractive apt install -y mysql-server
+
+
 
 echo "🚀 Starting Nginx + PHP-FPM Deployment with Tuning..."
 
 # Install Nginx, PHP-FPM, MySQL, Composer
-sudo apt update && sudo apt install -y nginx mysql-server php-fpm php-cli php-mysql php-mbstring php-xml composer unzip curl
+sudo apt update && sudo apt install -y nginx php-fpm php-cli php-mysql php-mbstring php-xml composer unzip curl
 
 # Clone Project
 if [ ! -d "$APP_DIR" ]; then
@@ -20,6 +36,9 @@ else
     echo "📁 Project directory exists. Pulling latest changes..."
     cd "$APP_DIR" && sudo git pull
 fi
+
+
+PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
 
 cd "$APP_DIR"
 
