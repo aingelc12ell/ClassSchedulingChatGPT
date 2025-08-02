@@ -1,6 +1,6 @@
-/vendor/*
-/tmp/*
-/logs/*
+/vendor
+/tmp
+/logs
 .env
 .idea
 .git
