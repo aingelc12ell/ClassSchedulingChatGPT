@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Schedule Calendar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.css">
+    <style>
+        #calendar {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+    </style>
+</head>
+<body>
+<h2 style="text-align:center;">Weekly Class Schedule</h2>
+<div id="calendar"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
+<script>
+    $(document).ready(function() {
+        let calendarEl = document.getElementById('calendar');
+
+        let calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            editable: true,
+            droppable: true,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,timeGridDay'
+            },
+            eventReceive: function(info) {
+                const eventData = {
+                    subject_id: info.event.extendedProps.subject_id,
+                    teacher_id: info.event.extendedProps.teacher_id,
+                    room_id: info.event.extendedProps.room_id,
+                    day: info.event.start.toLocaleDateString('en-US', { weekday: 'long' }),
+                    time_slot: getTimeSlotId(info.event.start, info.event.end),
+                    capacity: info.event.extendedProps.capacity
+                };
+
+                $.ajax({
+                    url: '/classes',
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer YOUR_JWT_TOKEN' },
+                    contentType: 'application/json',
+                    data: JSON.stringify(eventData),
+                    success: function(response) {
+                        alert('Class Scheduled Successfully!');
+                    },
+                    error: function() {
+                        alert('Failed to schedule class.');
+                        info.revert();
+                    }
+                });
+            },
+            eventDrop: function(info) {
+                const eventData = {
+                    day: info.event.start.toLocaleDateString('en-US', { weekday: 'long' }),
+                    time_slot: getTimeSlotId(info.event.start, info.event.end)
+                };
+
+                $.ajax({
+                    url: `/classes/${info.event.id}`,
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer YOUR_JWT_TOKEN' },
+                    contentType: 'application/json',
+                    data: JSON.stringify(eventData),
+                    success: function(response) {
+                        alert('Class Updated Successfully!');
+                    },
+                    error: function() {
+                        alert('Failed to update class.');
+                        info.revert();
+                    }
+                });
+            },
+            events: function(fetchInfo, successCallback, failureCallback) {
+                $.ajax({
+                    url: '/classes',
+                    headers: { 'Authorization': 'Bearer YOUR_JWT_TOKEN' },
+                    success: function(data) {
+                        let events = data.map(cls => ({
+                            id: cls.id,
+                            title: cls.subject.title + ' (' + cls.teacher.name + ')',
+                            start: fetchInfo.startStr.split('T')[0] + 'T' + cls.time_slot.start_time,
+                            end: fetchInfo.startStr.split('T')[0] + 'T' + cls.time_slot.end_time,
+                            dow: [getDayIndex(cls.day)],
+                            extendedProps: {
+                                subject_id: cls.subject.id,
+                                teacher_id: cls.teacher.id,
+                                room_id: cls.room.id,
+                                capacity: cls.capacity
+                            }
+                        }));
+                        successCallback(events);
+                    },
+                    error: function() {
+                        failureCallback();
+                    }
+                });
+            }
+        });
+
+        calendar.render();
+
+        function getDayIndex(dayName) {
+            const days = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+            return days[dayName];
+        }
+
+        function getTimeSlotId(start, end) {
+            // Example mapping logic (should be replaced with real slot matching logic)
+            return 1; // Dummy TimeSlot ID
+        }
+    });
+</script>
+</body>
+</html>

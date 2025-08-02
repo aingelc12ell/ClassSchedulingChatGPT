@@ -1,0 +1,63 @@
+name: Deploy School Scheduler
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: school_schedule
+          MYSQL_USER: scheduler_user
+          MYSQL_PASSWORD: StrongPassword123
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: |
+          docker-compose up -d --build
+
+      - name: Wait for MySQL to be healthy
+        run: |
+          for i in {1..10}; do
+            if docker exec mysql_scheduler mysqladmin ping -h "localhost" --silent; then
+              echo "MySQL is up!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+
+      - name: Run Composer Install
+        run: docker exec classschedulingchatgpt composer install
+
+      - name: Import Database Schema
+        run: docker exec -i mysql_scheduler mysql -uscheduler_user -pStrongPassword123 school_schedule < ./database/schema.sql
+
+      - name: Run Tests (Optional)
+        run: |
+          # Add PHPUnit or integration tests here if available
+          echo "Tests would run here"
+
+      - name: Cleanup Docker Containers
+        if: always()
+        run: docker-compose down

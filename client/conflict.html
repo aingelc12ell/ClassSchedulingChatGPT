@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conflict Override Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h3>Scheduling Conflicts</h3>
+        <div id="conflict-list" class="mb-4"></div>
+
+        <button id="force-schedule-btn" class="btn btn-danger">Force Schedule with Overrides</button>
+        <div id="override-status" class="mt-3"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            function loadConflicts() {
+                $.ajax({
+                    url: '/schedule/conflicts',
+                    headers: { 'Authorization': 'Bearer YOUR_JWT_TOKEN' },
+                    success: function(data) {
+                        if (data.conflicts.length === 0) {
+                            $('#conflict-list').html('<div class="alert alert-success">No Conflicts Found!</div>');
+                            $('#force-schedule-btn').hide();
+                        } else {
+                            let conflictHtml = '<ul class="list-group">';
+                            data.conflicts.forEach(function(conflict) {
+                                conflictHtml += `<li class="list-group-item list-group-item-warning">${conflict}</li>`;
+                            });
+                            conflictHtml += '</ul>';
+                            $('#conflict-list').html(conflictHtml);
+                            $('#force-schedule-btn').show();
+                        }
+                    },
+                    error: function() {
+                        $('#conflict-list').html('<div class="alert alert-danger">Failed to load conflicts.</div>');
+                    }
+                });
+            }
+
+            $('#force-schedule-btn').click(function() {
+                $.ajax({
+                    url: '/schedule/force',
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer YOUR_JWT_TOKEN' },
+                    contentType: 'application/json',
+                    data: JSON.stringify({ allow_conflict: true }),
+                    success: function(response) {
+                        $('#override-status').html('<div class="alert alert-success">Forced Schedule Applied Successfully!</div>');
+                        loadConflicts();
+                    },
+                    error: function() {
+                        $('#override-status').html('<div class="alert alert-danger">Failed to force schedule.</div>');
+                    }
+                });
+            });
+
+            loadConflicts();
+        });
+    </script>
+</body>
+</html>
