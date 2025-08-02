@@ -2,3 +2,5 @@
 /tmp/*
 /logs/*
 .env
+.idea
+.git
