@@ -16,7 +16,7 @@ sudo apt update && sudo apt install -y apache2 mysql-server php php-cli php-mbst
 
 # Clone project repository (replace with your repo URL)
 if [ ! -d "$APP_DIR" ]; then
-    sudo git clone https://github.com/your-repo/scheduler.git "$APP_DIR"
+    sudo git clone https://github.com/aingelc12ell/ClassSchedulingChatGPT.git "$APP_DIR"
 else
     echo "📁 Project directory already exists. Pulling latest changes..."
     cd "$APP_DIR" && sudo git pull

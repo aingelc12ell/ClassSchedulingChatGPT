@@ -15,7 +15,7 @@ sudo apt update && sudo apt install -y nginx mysql-server php-fpm php-cli php-my
 
 # Clone Project
 if [ ! -d "$APP_DIR" ]; then
-    sudo git clone https://github.com/your-repo/scheduler.git "$APP_DIR"
+    sudo git clone https://github.com/aingelc12ell/ClassSchedulingChatGPT.git "$APP_DIR"
 else
     echo "📁 Project directory exists. Pulling latest changes..."
     cd "$APP_DIR" && sudo git pull
@@ -45,10 +45,10 @@ sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
 sudo mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
 sudo mysql -e "FLUSH PRIVILEGES;"
-mysql -u$DB_USER -p$DB_PASS $DB_NAME < ./database/schema.sql
+mysql -u$DB_USER -p$DB_PASS $DB_NAME < ./db/schema.sql
 
 # Nginx Configuration
-NGINX_CONF="/etc/nginx/sites-available/scheduler"
+NGINX_CONF="/etc/nginx/sites-available/schedulerchatgpt"
 if [ ! -f "$NGINX_CONF" ]; then
     echo "Setting up Nginx configuration..."
     sudo bash -c "cat <<EOL > $NGINX_CONF
